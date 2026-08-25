@@ -1,0 +1,23 @@
+[project]
+name = "cd14524-building-agents-public"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb>=1.5.9",
+    "ipykernel>=7.3.0",
+    "openai>=2.44.0",
+    "pandas>=3.0.5",
+    "pdfplumber>=0.11.10",
+    "pydantic>=2.13.4",
+    "sqlalchemy>=2.0.51",
+    "tavily-python>=0.7.26",
+    "typing-extensions>=4.16.0",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+    "ruff>=0.15.20",
+]
