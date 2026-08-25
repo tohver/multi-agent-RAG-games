@@ -1,23 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "cd14524-building-agents-public"
-version = "0.1.0"
-description = "Add your description here"
+name = "research-agent"
+version = "1.0.0"
+description = "A retrieval-augmented research agent for the video game industry, built as an explicit state machine."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
+license = { text = "MIT" }
 dependencies = [
-    "chromadb>=1.5.9",
-    "ipykernel>=7.3.0",
-    "openai>=2.44.0",
-    "pandas>=3.0.5",
-    "pdfplumber>=0.11.10",
-    "pydantic>=2.13.4",
-    "sqlalchemy>=2.0.51",
-    "tavily-python>=0.7.26",
-    "typing-extensions>=4.16.0",
+    "chromadb>=0.5",
+    "openai>=1.40",
+    "tavily-python>=0.5",
+    "pydantic>=2.7",
+    "python-dotenv>=1.0",
+    "httpx>=0.27",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
-    "ipykernel>=7.3.0",
-    "ruff>=0.15.20",
+    "pytest>=8.0",
+    "ruff>=0.5",
 ]
+
+[project.scripts]
+research-agent = "research_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 90
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
