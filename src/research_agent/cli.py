@@ -25,22 +25,11 @@ SOURCE_LABELS = {
 
 
 def _describe_source(path: list) -> str:
-    '''
-    In plain English: translates the internal step names into something a person
-    would say.
-
-    The route through the pipeline is written in the vocabulary of the code -
-    `recall`, `web_search`. Useful when debugging, meaningless to someone who just
-    wants an answer. This turns it into a phrase like "a web search".
-
-    Output: one short phrase naming where the answer came from. Shown after every
-    answer in interactive mode, so it is always clear whether you are reading
-    something from the local data or from the internet.
-    '''
-    """Describe, in plain words, where an answer came from.
+    """Describe where the answer came from (local data or internet).
+    Shown after every answer in interactive mode. 
 
     Args:
-        path: The node ids the run visited.
+        path: The node ids the 'run' visited.
 
     Returns:
         A short phrase naming the source.
@@ -52,15 +41,12 @@ def _describe_source(path: list) -> str:
 
 
 def _answer_once(app: Application, question: str, show_path: bool) -> None:
-    '''
-    In plain English: answers a single question and prints it, for when the command
-    was run with a question already typed in.
+    """
+    Answer one question and print the result.
+    The route is shown above the answer unless asked for quiet output, 
+    which is handy when feeding the answer into a downstream app.
+    """
 
-    Output: nothing returned - it prints. The route is shown above the answer unless
-    you asked for quiet output, which is handy when feeding the answer into another
-    program.
-    '''
-    """Answer one question and print the result."""
     run = app.agent.invoke(question)
     path = ResearchAgent.path_of(run)
 
@@ -71,22 +57,13 @@ def _answer_once(app: Application, question: str, show_path: bool) -> None:
 
 def _interactive(app: Application) -> int:
     '''
-    In plain English: the conversational mode - keeps asking for questions until you
-    stop.
-
-    This is what runs when the command is given no arguments at all, and it is
-    deliberately the default. Typing a question into a prompt avoids the two things
-    that trip people up on a command line: remembering flags, and getting quotation
-    marks around a sentence right.
-
-    Typing `quit`, or pressing Ctrl-C, ends it.
+    
 
     Output: an exit code of 0. Leaving the loop is a normal end, not an error.
     '''
-    """Ask questions in a loop until the user stops.
-
-    Chosen as the no-argument default because it needs no quoting and no flags -
-    the two things that trip people up on a command line.
+    """The conversational mode, ask questions in a loop until the user stops.
+    The default mode, command without arguments.
+    Typing `quit`, `exit`, `q`, or pressing Ctrl-C, ends it.
 
     Returns:
         Always 0; leaving the loop is a normal exit.
@@ -112,13 +89,11 @@ def _interactive(app: Application) -> int:
 
 
 def _parse_args(argv=None) -> argparse.Namespace:
-    '''
-    In plain English: reads what the user typed after the command name.
+    """
+    Parse the command line arguments.
+    Argument --chroma-path is for the case, the user wants to pick a different Chroma database.
+    """
 
-    Output: an object holding the question and any flags. Everything downstream
-    reads its instructions from it, so this is the single place where command line
-    text turns into decisions.
-    '''
     parser = argparse.ArgumentParser(
         prog="research-agent",
         description="Ask a research agent about video games.",
@@ -152,26 +127,11 @@ def _parse_args(argv=None) -> argparse.Namespace:
 
 
 def main(argv=None) -> int:
-    '''
-    In plain English: the front door of the whole program - everything starts here.
-
-    It works out what you asked for and routes accordingly: build the database,
-    answer one question, run the tests, or open the interactive prompt. The order is
-    deliberate. Settings are read first, because nothing works without keys.
-    Index-building comes before the agent is assembled, because that step is what
-    creates the database the agent needs.
-
-    The one failure worth expecting is a missing database, so the error message for
-    it says exactly which command to run.
-
-    Output: an exit code - 0 when things went well, 1 for a missing key, a missing
-    database, or a test that took the wrong route. That number is what lets this be
-    used in a script or an automated check.
-    '''
-    """Run the CLI.
+    """
+    Run the CLI.
 
     Returns:
-        0 on success; 1 on a credentials problem, a missing index, or an
+        exit code 0 on success; 1 on a credentials problem, a missing index, or an
         evaluation case that took the wrong path.
     """
     args = _parse_args(argv)
@@ -186,8 +146,7 @@ def main(argv=None) -> int:
         print(error, file=sys.stderr)
         return 1
 
-    # Indexing runs before the agent exists, because the agent needs the
-    # collection it creates.
+    # Indexing runs before the agent exists
     if args.build_index:
         try:
             count = build_index(settings)
