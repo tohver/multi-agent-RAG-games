@@ -269,9 +269,22 @@ re-indexing updates a record instead of duplicating it.
 }
 ```
 
-`Name`, `Platform`, `Genre`, `YearOfRelease` and `Description` are required; the indexer
-raises and names the offending file if one is missing, rather than quietly indexing a
-half-empty record. `Publisher` is stored as metadata.
+`Name`, `Platform`, `Genre`, `YearOfRelease` and `Description` are required, and a field
+that is present but empty counts as missing — an empty genre indexes just as badly as no
+genre at all. `Publisher` is stored as metadata.
+
+A file that is unreadable or incomplete does not stop the build. It is set aside, the rest
+of the directory is indexed normally, and every skipped file is listed with its reason in
+`index-skipped.md` (see `skip_report_path`):
+
+```
+skipped 2 of 17 source file(s); details in index-skipped.md
+Indexed 15 games into 'udaplay'.
+```
+
+A clean run deletes that report, so a stale one can never be mistaken for a current one.
+If no file in the directory is usable, the collection is left untouched rather than
+emptied.
 
 Platform, genre, name, year and description are bundled into a single indexed line, so a
 question phrased around any of them has something to match on.
@@ -283,9 +296,10 @@ on the command line.
 
 | Setting | Default | Purpose |
 |---------|---------|---------|
-| `model` | `gpt-4o-mini` | Chat model used by every LLM role |
+| `chat_model` | `gpt-4o-mini` | Chat model used by every LLM role. The embedding model is separate, and owned by ChromaDB |
 | `chroma_path` | `chromadb` | Persistent database directory (`--chroma-path`) |
 | `games_path` | `data/games` | Source JSON directory, read by the indexer |
+| `skip_report_path` | `index-skipped.md` | Where the indexer lists source files it had to skip |
 | `collection_name` | `udaplay` | Collection holding the indexed games |
 | `memory_collection` | `long_term_memory` | Collection holding the web-answer cache |
 | `memory_owner` | `player` | Owner label every cache entry is stored under |

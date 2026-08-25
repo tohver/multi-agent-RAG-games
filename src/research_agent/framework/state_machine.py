@@ -13,10 +13,12 @@ StateSchema = TypeVar("StateSchema")
 
 @dataclass
 class Resource:
-    vars: Dict[str, Any]
+    """Long-lived objects a step may need, keyed by name."""
+
+    services: Dict[str, Any]
 
 class Step(Generic[StateSchema]):
-    def __init__(self, step_id: str, logic: Callable[[StateSchema], Dict]):
+    def __init__(self, step_id: str, action: Callable[[StateSchema], Dict]):
         '''
         In plain English: defines one stop in the pipeline - a name plus the work to do
         there.
@@ -27,9 +29,9 @@ class Step(Generic[StateSchema]):
         Output: nothing returned; the step is ready to be placed on the map.
         '''
         self.step_id = step_id
-        self.logic = logic
-        # Store the number of parameters the logic function expects
-        self.logic_params_count = self._calculate_params_count()
+        self.action = action
+        # Store the number of parameters the action expects
+        self.action_params_count = self._calculate_params_count()
 
     def __str__(self) -> str:
         '''
@@ -58,15 +60,15 @@ class Step(Generic[StateSchema]):
         Output: the number of arguments, remembered and used on every run.
         '''
         """Calculate the number of parameters excluding 'self' for bound methods"""
-        if inspect.ismethod(self.logic):
+        if inspect.ismethod(self.action):
             # For bound methods, subtract 1 to exclude 'self'
-            return self.logic.__func__.__code__.co_argcount - 1
+            return self.action.__func__.__code__.co_argcount - 1
         else:
             # For regular functions
-            return self.logic.__code__.co_argcount
+            return self.action.__code__.co_argcount
 
     def run(self, state: StateSchema, state_schema: Type[StateSchema], resource: Resource=None) -> StateSchema:
-        # Call logic function with appropriate number of arguments
+        # Call the action with the appropriate number of arguments
         '''
         In plain English: does this step's work and folds the result into the running
         notes.
@@ -79,14 +81,14 @@ class Step(Generic[StateSchema]):
 
         Output: the updated notes, passed on to whichever step comes next.
         '''
-        if self.logic_params_count == 1:
-            result = self.logic(state)
-        elif self.logic_params_count == 2:
-            result = self.logic(state, resource)
+        if self.action_params_count == 1:
+            result = self.action(state)
+        elif self.action_params_count == 2:
+            result = self.action(state, resource)
         else:
             raise ValueError(
-                f"Step '{self.step_id}' logic function must accept either 1 argument (state) "
-                f"or 2 arguments (state, resource). Found {self.logic_params_count} arguments."
+                f"Step '{self.step_id}' action must accept either 1 argument (state) "
+                f"or 2 arguments (state, resource). Found {self.action_params_count} arguments."
             ) 
         # Get expected fields from the TypedDict
         expected_fields = get_type_hints(state_schema)
@@ -175,7 +177,7 @@ class Snapshot(Generic[StateSchema]):
     """Represents a single state snapshot in time"""
     snapshot_id: str
     timestamp: datetime
-    state_data: StateSchema
+    state: StateSchema
     state_schema: Type[StateSchema]
     step_id: str
 
@@ -186,7 +188,7 @@ class Snapshot(Generic[StateSchema]):
 
         Output: that text.
         '''
-        return f"Snapshot('{self.snapshot_id}') @ [{self.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}]: {self.step_id}.State({self.state_data})"
+        return f"Snapshot('{self.snapshot_id}') @ [{self.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}]: {self.step_id}.State({self.state})"
 
     def __repr__(self) -> str:
         '''
@@ -197,7 +199,7 @@ class Snapshot(Generic[StateSchema]):
         return self.__str__()
 
     @classmethod
-    def create(cls, state_data: StateSchema, state_schema: Type[StateSchema],
+    def create(cls, state: StateSchema, state_schema: Type[StateSchema],
                step_id:str) -> 'Snapshot[StateSchema]':
         '''
         In plain English: records the state of the notes at one moment, stamped with the
@@ -209,7 +211,7 @@ class Snapshot(Generic[StateSchema]):
         return cls(
             snapshot_id=str(uuid.uuid4()),
             timestamp=datetime.now(),
-            state_data=state_data,
+            state=state,
             state_schema=state_schema,
             step_id=step_id,
         )
@@ -295,7 +297,7 @@ class Run(Generic[StateSchema]):
         """Get the final state of this run"""
         if not self.snapshots:
             return None
-        return self.snapshots[-1].state_data
+        return self.snapshots[-1].state
 
 
 class StateMachine(Generic[StateSchema]):

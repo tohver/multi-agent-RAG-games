@@ -170,7 +170,7 @@ def run_case(
         print(f"path    : {' -> '.join(path)}")
         if not path_ok:
             print(f"expected: {' -> '.join(item.expected_path)}")
-        print(f"cached  : {state.get('cached')}")
+        print(f"cached  : {state.get('cached_answers')}")
         print(f"answer  : {state['answer']}")
         print(f"path ok : {path_ok}   answer score: {judged.overall_score:.2f}")
 
@@ -215,7 +215,7 @@ def run_suite(
     """
     cases = cases if cases is not None else default_cases()
     evaluator = AgentEvaluator(
-        model=app.settings.model, api_key=app.settings.openai_api_key
+        model=app.settings.chat_model, api_key=app.settings.openai_api_key
     )
 
     app.memory.clear(app.settings.memory_owner, app.settings.memory_namespace)

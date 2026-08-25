@@ -32,11 +32,12 @@ class MemorySearchResult:
 
     Attributes:
         fragments: Matches, nearest first.
-        metadata: Search metadata; `distances` holds one float per fragment.
+        distances: One distance per fragment, in the same order. Smaller means
+            closer in meaning. Callers need these to reject weak matches.
     """
 
     fragments: List[MemoryFragment]
-    metadata: Dict
+    distances: List[float]
 
 
 @dataclass
@@ -44,12 +45,12 @@ class TimestampFilter:
     """Age bounds for a search, as Unix timestamps.
 
     Attributes:
-        greater_than_value: Only fragments created after this moment.
-        lower_than_value: Only fragments created before this moment.
+        newer_than: Only fragments created after this moment.
+        older_than: Only fragments created before this moment.
     """
 
-    greater_than_value: Optional[int] = None
-    lower_than_value: Optional[int] = None
+    newer_than: Optional[int] = None
+    older_than: Optional[int] = None
 
 
 class LongTermMemory:
@@ -72,7 +73,7 @@ class LongTermMemory:
         """
         self.vector_store = vector_store
 
-    def register(
+    def store(
         self,
         memory_fragment: MemoryFragment,
         metadata: Optional[Dict[str, str]] = None,
@@ -145,14 +146,10 @@ class LongTermMemory:
             {"owner": {"$eq": owner}},
         ]
         if timestamp_filter:
-            if timestamp_filter.greater_than_value:
-                conditions.append(
-                    {"timestamp": {"$gt": timestamp_filter.greater_than_value}}
-                )
-            if timestamp_filter.lower_than_value:
-                conditions.append(
-                    {"timestamp": {"$lt": timestamp_filter.lower_than_value}}
-                )
+            if timestamp_filter.newer_than:
+                conditions.append({"timestamp": {"$gt": timestamp_filter.newer_than}})
+            if timestamp_filter.older_than:
+                conditions.append({"timestamp": {"$lt": timestamp_filter.older_than}})
 
         result = self.vector_store.query(
             query_texts=[query_text], n_results=limit, where={"$and": conditions}
@@ -173,7 +170,7 @@ class LongTermMemory:
 
         return MemorySearchResult(
             fragments=fragments,
-            metadata={"distances": result.get("distances", [[]])[0]},
+            distances=result.get("distances", [[]])[0],
         )
 
     def clear(self, owner: str, namespace: str) -> None:

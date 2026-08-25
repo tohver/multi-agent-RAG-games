@@ -41,7 +41,7 @@ class RAG:
         '''
         self.workflow = self._create_state_machine()
         self.resource = Resource(
-            vars = {
+            services = {
                 "llm": llm,
                 "vector_store": vector_store,
             }
@@ -56,7 +56,7 @@ class RAG:
         next step.
         '''
         question = state["question"]
-        vector_store:VectorStore = resource.vars.get("vector_store")
+        vector_store:VectorStore = resource.services.get("vector_store")
         results = vector_store.query(query_texts=[question])
 
         documents = results['documents'][0] if results['documents'] else []
@@ -100,7 +100,7 @@ class RAG:
         Output: the answer text, plus the conversation including the reply, in case a
         caller wants to see exactly what was asked.
         '''
-        llm:LLM = resource.vars.get("llm")
+        llm:LLM = resource.services.get("llm")
         ai_message = llm.invoke(state["messages"])
         return {
             "answer": ai_message.content, 

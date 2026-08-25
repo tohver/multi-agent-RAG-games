@@ -23,7 +23,8 @@ class Settings:
     Attributes:
         openai_api_key: Key for chat completions and embeddings.
         tavily_api_key: Key for the web search tool.
-        model: Chat model used by every LLM role in the pipeline.
+        chat_model: Chat model used by every LLM role in the pipeline. The
+            embedding model is a separate one, owned by ChromaDB.
         chroma_path: Directory holding the persistent Chroma database.
         games_path: Directory of source JSON files, read by the indexer.
         skip_report_path: Where the indexer lists source files it had to
@@ -47,7 +48,7 @@ class Settings:
 
     openai_api_key: str
     tavily_api_key: str
-    model: str = "gpt-4o-mini"
+    chat_model: str = "gpt-4o-mini"
     chroma_path: Path = Path("chromadb")
     games_path: Path = Path("data/games")
     skip_report_path: Path = Path("index-skipped.md")

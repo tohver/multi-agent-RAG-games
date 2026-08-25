@@ -55,8 +55,8 @@ class LoadReport:
     skipped: List[SkippedFile] = field(default_factory=list)
 
     @property
-    def total(self) -> int:
-        """How many JSON files were examined in total."""
+    def files_examined(self) -> int:
+        """How many JSON files were looked at, usable or not."""
         return len(self.documents) + len(self.skipped)
 
 
@@ -155,7 +155,7 @@ def write_skip_report(report: LoadReport, path: Path, games_dir: Path) -> bool:
         "",
         f"Generated {datetime.now().isoformat(timespec='seconds')} from `{games_dir}`.",
         "",
-        f"{len(report.skipped)} of {report.total} file(s) were not indexed. "
+        f"{len(report.skipped)} of {report.files_examined} file(s) were not indexed. "
         "The remaining files were indexed normally; fix these and re-run "
         "`research-agent --build-index`.",
         "",
@@ -188,7 +188,7 @@ def build_index(settings: Settings) -> int:
         logger.warning(
             "skipped %d of %d source file(s); details in %s",
             len(report.skipped),
-            report.total,
+            report.files_examined,
             settings.skip_report_path,
         )
 

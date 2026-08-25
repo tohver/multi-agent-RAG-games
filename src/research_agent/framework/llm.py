@@ -60,7 +60,7 @@ class LLM:
 
         return payload
 
-    def _convert_input(self, input: Any) -> List[BaseMessage]:
+    def _as_messages(self, input: Any) -> List[BaseMessage]:
         '''
         In plain English: accepts whatever shape the caller found convenient and turns
         it into a proper conversation.
@@ -95,7 +95,7 @@ class LLM:
         Output: the reply, along with any tools the model wants called and how many
         tokens were used. The token count feeds the cost estimate in the evaluation.
         '''
-        messages = self._convert_input(input)
+        messages = self._as_messages(input)
         payload = self._build_payload(messages)
         if response_format:
             payload.update({"response_format": response_format})

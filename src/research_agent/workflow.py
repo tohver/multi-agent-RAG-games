@@ -23,9 +23,9 @@ class ResearchState(TypedDict):
 
     question: str
     documents: List[str]
-    useful: bool
-    evaluation: str
-    cached: List[str]
+    documents_sufficient: bool
+    evaluation_reason: str
+    cached_answers: List[str]
     web_answer: str
     sources: List[Dict]
     answer: str
@@ -77,7 +77,7 @@ class ResearchAgent:
         self.tools = tools
         self.settings = settings
         self.llm = LLM(
-            model=settings.model,
+            model=settings.chat_model,
             temperature=settings.answer_temperature,
             api_key=settings.openai_api_key,
         )
@@ -112,7 +112,10 @@ class ResearchAgent:
         report = self.tools.evaluate_retrieval(
             question=state["question"], retrieved_docs=state["documents"]
         )
-        return {"useful": report.useful, "evaluation": report.description}
+        return {
+            "documents_sufficient": report.useful,
+            "evaluation_reason": report.reason,
+        }
 
     def _recall(self, state: ResearchState) -> ResearchState:
         '''
@@ -126,7 +129,7 @@ class ResearchAgent:
         found, which sends the question to the web.
         '''
         """Node: before paying for a web search, check whether we already did."""
-        return {"cached": self.tools.search_memory(query=state["question"])}
+        return {"cached_answers": self.tools.search_memory(query=state["question"])}
 
     def _web_search(self, state: ResearchState) -> ResearchState:
         '''
@@ -167,13 +170,13 @@ class ResearchAgent:
         Returns:
             A `(origin, context)` pair; `origin` names the source for the prompt.
         """
-        if state.get("useful"):
+        if state.get("documents_sufficient"):
             return (
                 "the internal game database",
                 "\n".join(f"- {doc}" for doc in state["documents"]),
             )
 
-        cached = state.get("cached") or []
+        cached = state.get("cached_answers") or []
         if cached:
             return (
                 "a previously cached web answer",
@@ -283,7 +286,7 @@ class ResearchAgent:
             the judge has spoken.
             '''
             """Good documents answer directly; otherwise try the cache."""
-            return answer if state.get("useful") else recall
+            return answer if state.get("documents_sufficient") else recall
 
         def after_recall(state: ResearchState) -> Step[ResearchState]:
             '''
@@ -296,7 +299,7 @@ class ResearchAgent:
             miss.
             '''
             """A cache hit spares us the web search."""
-            return answer if state.get("cached") else web_search
+            return answer if state.get("cached_answers") else web_search
 
         def after_answer(state: ResearchState) -> Step[ResearchState]:
             '''

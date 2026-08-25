@@ -77,7 +77,7 @@ class VectorStore:
         elif not isinstance(item, Corpus):
             raise TypeError("item must be Document, Corpus, or List[Document].")
 
-        batch = item.to_dict()
+        batch = item.to_columns()
         self._collection.add(
             documents=batch["contents"],
             ids=batch["ids"],
@@ -107,7 +107,7 @@ class VectorStore:
         elif isinstance(item, list):
             item = Corpus(item)
 
-        batch = item.to_dict()
+        batch = item.to_columns()
         self._collection.upsert(
             documents=batch["contents"],
             ids=batch["ids"],

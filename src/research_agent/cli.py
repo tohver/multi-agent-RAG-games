@@ -24,7 +24,7 @@ SOURCE_LABELS = {
 }
 
 
-def _source_of(path: list) -> str:
+def _describe_source(path: list) -> str:
     '''
     In plain English: translates the internal step names into something a person
     would say.
@@ -108,7 +108,7 @@ def _interactive(app: Application) -> int:
         run = app.agent.invoke(question)
         path = ResearchAgent.path_of(run)
         print(f"Answer  : {run.get_final_state()['answer']}")
-        print(f"          (from {_source_of(path)})\n")
+        print(f"          (from {_describe_source(path)})\n")
 
 
 def _parse_args(argv=None) -> argparse.Namespace:

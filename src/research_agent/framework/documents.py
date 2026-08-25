@@ -71,7 +71,7 @@ class Corpus(MutableSequence):
             raise TypeError("Collection only supports Document items")
         self._documents.insert(index, value)
 
-    def to_dict(self) -> Dict[str, List[Any]]:
+    def to_columns(self) -> Dict[str, List[Any]]:
         '''
         In plain English: reshapes the documents into the format the database expects.
 
@@ -84,7 +84,7 @@ class Corpus(MutableSequence):
         when documents are saved.
         '''
         """
-        Convert the corpus to a dictionary format suitable for batch operations.
+        Convert the corpus to the parallel lists batch operations expect.
         
         This method extracts all document contents, metadata, and IDs into
         separate lists, which is the format typically expected by vector
@@ -99,7 +99,7 @@ class Corpus(MutableSequence):
                 
         Example:
             >>> corpus = Corpus([doc1, doc2])
-            >>> batch_data = corpus.to_dict()
+            >>> batch_data = corpus.to_columns()
             >>> chroma_collection.add(
             ...     documents=batch_data['contents'],
             ...     metadatas=batch_data['metadatas'],

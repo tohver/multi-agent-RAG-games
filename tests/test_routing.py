@@ -52,7 +52,7 @@ def build_agent(*, docs_useful, cached, web_answer="A web answer"):
         retrieve_game=StubTool("retrieve_game", ["[PS5] [Racing] Some Game (2020) - x"]),
         evaluate_retrieval=StubTool(
             "evaluate_retrieval",
-            EvaluationReport(useful=docs_useful, description="stub verdict"),
+            EvaluationReport(useful=docs_useful, reason="stub verdict"),
         ),
         game_web_search=StubTool(
             "game_web_search",
@@ -106,9 +106,23 @@ def test_a_failed_web_search_is_not_cached():
 @pytest.mark.parametrize(
     "state, expected_origin",
     [
-        ({"useful": True, "documents": ["d"]}, "the internal game database"),
-        ({"useful": False, "cached": ["c"]}, "a previously cached web answer"),
-        ({"useful": False, "cached": [], "web_answer": "w", "sources": []}, "a web search"),
+        (
+            {"documents_sufficient": True, "documents": ["d"]},
+            "the internal game database",
+        ),
+        (
+            {"documents_sufficient": False, "cached_answers": ["c"]},
+            "a previously cached web answer",
+        ),
+        (
+            {
+                "documents_sufficient": False,
+                "cached_answers": [],
+                "web_answer": "w",
+                "sources": [],
+            },
+            "a web search",
+        ),
     ],
 )
 def test_context_names_the_source_it_used(state, expected_origin):

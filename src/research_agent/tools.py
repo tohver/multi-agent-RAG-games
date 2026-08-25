@@ -35,7 +35,7 @@ class EvaluationReport(BaseModel):
     useful: bool = Field(
         description="Whether the retrieved documents are sufficient to answer the question"
     )
-    description: str = Field(
+    reason: str = Field(
         description="Detailed explanation of the verdict, so a caller can act on it"
     )
 
@@ -120,7 +120,9 @@ def build_tools(
 
     # One LLM per role, built once. Each LLM owns an HTTP connection pool, so
     # rebuilding them per call would throw away connection reuse for nothing.
-    judge_llm = LLM(model=settings.model, temperature=0.0, api_key=settings.openai_api_key)
+    judge_llm = LLM(
+        model=settings.chat_model, temperature=0.0, api_key=settings.openai_api_key
+    )
     tavily_client = TavilyClient(api_key=settings.tavily_api_key)
 
     def retrieve_game(query: str) -> List[str]:
@@ -214,7 +216,7 @@ def build_tools(
             # enough", it should push the pipeline on to the web instead.
             return EvaluationReport(
                 useful=False,
-                description=(
+                reason=(
                     f"Could not parse the judge's answer ({error}); "
                     f"treating documents as unusable."
                 ),
@@ -311,11 +313,11 @@ def build_tools(
             owner=settings.memory_owner,
             namespace=settings.memory_namespace,
             limit=1,
-            timestamp_filter=TimestampFilter(greater_than_value=cutoff),
+            timestamp_filter=TimestampFilter(newer_than=cutoff),
         )
         return [
             fragment.content
-            for fragment, distance in zip(result.fragments, result.metadata["distances"])
+            for fragment, distance in zip(result.fragments, result.distances)
             if distance < settings.cache_hit_distance
         ]
 
@@ -353,7 +355,7 @@ def build_tools(
             A short description of what was stored.
         """
         content = f"{question} -> {answer}"
-        memory.register(
+        memory.store(
             MemoryFragment(
                 content=content,
                 owner=settings.memory_owner,
