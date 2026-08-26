@@ -26,10 +26,10 @@ REQUIRED_FIELDS = ("Name", "Platform", "Genre", "YearOfRelease", "Description")
 
 @dataclass(frozen=True)
 class SkippedFile:
-    """One source file that could not be indexed, and the reason why.
+    """Not indexed source file and the reason why is wasn't indexed.
 
     Attributes:
-        name: The file name, as it appears in the games directory.
+        name: The file name.
         problem: What was wrong with it, phrased for the report.
     """
 
@@ -57,10 +57,6 @@ class LoadReport:
 
 def _missing_fields(game: dict) -> List[str]:
     """Return the required fields that are absent, null, or blank.
-
-    A field present but empty is treated as missing: an empty genre indexes
-    just as badly as no genre at all, and silently produces a record nobody
-    would notice was wrong.
     """
     missing = []
     for name in REQUIRED_FIELDS:
@@ -71,21 +67,17 @@ def _missing_fields(game: dict) -> List[str]:
 
 
 def load_games(games_dir: Path) -> LoadReport:
-    """Read every game JSON file into a `Document`.
+    """Read every JSON file into a `Document`.
 
-    The indexed text bundles platform, genre, name, year and description into
+    The indexed text bundles 'platform', 'genre', 'name', 'year', and 'description' into
     one line, so a question phrased around any of those has something to match
     on. The full record is kept as metadata.
 
-    A file that is unreadable or incomplete does not stop the run. It is set
-    aside with the reason and reported at the end, because losing every good
-    record in the directory to one bad file helps nobody.
-
     Args:
-        games_dir: Directory holding one JSON file per game.
+        games_dir: Directory holding the JSON files.
 
     Returns:
-        A `LoadReport`: one `Document` per usable file, ordered by filename and
+        A `LoadReport`: one `Document` per file, ordered by filename and
         keyed on the filename stem so re-indexing updates rather than
         duplicates, plus a `SkippedFile` for every file that could not be used.
 
@@ -136,7 +128,7 @@ def write_skip_report(report: LoadReport, path: Path, games_dir: Path) -> bool:
     Args:
         report: The outcome of `load_games`.
         path: Where to write the report.
-        games_dir: The directory the files came from, named in the report.
+        games_dir: The origin directory the files in the report.
 
     Returns:
         True if a report was written, False if there was nothing to report.
