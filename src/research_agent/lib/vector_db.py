@@ -17,11 +17,6 @@ class VectorStore:
     """
 
     def __init__(self, chroma_collection: ChromaCollection):
-        '''
-        In plain English: wraps one database collection in a friendlier interface.
-
-        Output: nothing returned. Every method below works on that one collection.
-        '''
         self._collection = chroma_collection
 
     @property

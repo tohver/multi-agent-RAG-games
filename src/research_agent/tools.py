@@ -226,14 +226,10 @@ def build_tools(
         ]
 
     def register_memory(question: str, answer: str, sources: List[Dict]) -> str:
-        """
-        Cache an answer that required a web search, so the same question does
-        not have to hit the web again.
+        """Cache an answer that required a web search.
 
-        The embedded text is "question -> answer" - keeping the question in it
-        makes a later lookup match on the question's wording. The source URLs go
-        to metadata instead, so they stay available without polluting the
-        embedding.
+        Embeds "question -> answer" so a later lookup matches on the question's
+        wording; the source URLs go to metadata instead.
 
         Args:
             question: the user's original question

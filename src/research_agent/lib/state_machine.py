@@ -19,34 +19,15 @@ class Resource:
 
 class Step(Generic[StateSchema]):
     def __init__(self, step_id: str, action: Callable[[StateSchema], Dict]):
-        '''
-        In plain English: defines one stop in the pipeline - a name plus the work to do
-        there.
-
-        It also checks up front how many arguments that work expects, so it does not
-        have to be worked out again on every single run.
-
-        Output: nothing returned; the step is ready to be placed on the map.
-        '''
         self.step_id = step_id
         self.action = action
         # Store the number of parameters the action expects
         self.action_params_count = self._calculate_params_count()
 
     def __str__(self) -> str:
-        '''
-        In plain English: how a step prints, e.g. `Step('retrieve')`.
-
-        Output: that text.
-        '''
         return f"Step('{self.step_id}')"
 
     def __repr__(self) -> str:
-        '''
-        In plain English: same as above, used when a step appears inside a list.
-
-        Output: that text.
-        '''
         return self.__str__()
 
     def _calculate_params_count(self):
@@ -59,19 +40,14 @@ class Step(Generic[StateSchema]):
             return self.action.__code__.co_argcount
 
     def run(self, state: StateSchema, state_schema: Type[StateSchema], resource: Resource=None) -> StateSchema:
-        # Call the action with the appropriate number of arguments
-        '''
-        In plain English: does this step's work and folds the result into the running
-        notes.
+        """Run the step's action and merge its result into the state.
 
-        Two things worth knowing. It passes either one argument or two, depending on what
-        the step asked for. And it merges rather than replaces: a step returns only the
-        fields it changed, and everything else carries on untouched. That is why every
-        step in this project can return a small dictionary and ignore the rest of the
-        state.
+        The action is called with `(state)` or `(state, resource)` according to
+        its signature; only keys declared in `state_schema` are merged.
 
-        Output: the updated notes, passed on to whichever step comes next.
-        '''
+        Raises:
+            ValueError: If the action accepts neither 1 nor 2 arguments.
+        """
         if self.action_params_count == 1:
             result = self.action(state)
         elif self.action_params_count == 2:
@@ -98,11 +74,6 @@ class EntryPoint(Step[StateSchema]):
     """Special step that marks the beginning of the workflow.
     Users should connect this step to their first business logic step."""
     def __init__(self):
-        '''
-        In plain English: the marker for where a run begins. It does no work itself.
-
-        Output: nothing returned.
-        '''
         super().__init__("__entry__", lambda x: {})
 
 
@@ -110,11 +81,6 @@ class Termination(Step[StateSchema]):
     """Special step that marks the end of the workflow.
     Users should connect their final business logic step(s) to this step."""
     def __init__(self):
-        '''
-        In plain English: the marker for where a run ends. It does no work itself.
-
-        Output: nothing returned.
-        '''
         super().__init__("__termination__", lambda x: {})
 
 
@@ -125,32 +91,13 @@ class Transition(Generic[StateSchema]):
     condition: Optional[Callable[[StateSchema], Union[str, List[str], Step[StateSchema], List[Step[StateSchema]]]]] = None
 
     def __str__(self) -> str:
-        '''
-        In plain English: how a connection prints, showing what leads where.
-
-        Output: text like `Transition('evaluate' -> ['answer', 'recall'])`.
-        '''
         return f"Transition('{self.source}' -> {self.targets})"
 
     def __repr__(self) -> str:
-        '''
-        In plain English: same as above, used when a connection appears inside a list.
-
-        Output: that text.
-        '''
         return self.__str__()
 
     def resolve(self, state: StateSchema) -> List[str]:
-        '''
-        In plain English: works out which step actually comes next.
-
-        If the connection has a condition attached, the condition is asked, and it may
-        answer with a step or just a name. If there is no condition, the destination was
-        fixed when the map was drawn. This is the mechanism the whole project's branching
-        rests on.
-
-        Output: the name of the next step to run.
-        '''
+        """Return the ids of the next steps, applying the condition if one is set."""
         if self.condition:
             result = self.condition(state)
             if isinstance(result, Step):
@@ -173,32 +120,15 @@ class Snapshot(Generic[StateSchema]):
     step_id: str
 
     def __str__(self) -> str:
-        '''
-        In plain English: how one recorded moment prints - when it happened, at which
-        step, and the notes at that time.
-
-        Output: that text.
-        '''
         return f"Snapshot('{self.snapshot_id}') @ [{self.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')}]: {self.step_id}.State({self.state})"
 
     def __repr__(self) -> str:
-        '''
-        In plain English: same as above, used inside a list.
-
-        Output: that text.
-        '''
         return self.__str__()
 
     @classmethod
     def create(cls, state: StateSchema, state_schema: Type[StateSchema],
                step_id:str) -> 'Snapshot[StateSchema]':
-        '''
-        In plain English: records the state of the notes at one moment, stamped with the
-        time and the step.
-
-        Output: the recorded moment. Collected during a run, and it is this record that
-        later reveals which route a question took.
-        '''
+        """Capture the state at one step, stamped with the current time."""
         return cls(
             snapshot_id=str(uuid.uuid4()),
             timestamp=datetime.now(),
@@ -217,28 +147,14 @@ class Run(Generic[StateSchema]):
     end_timestamp: Optional[datetime] = None
 
     def __str__(self) -> str:
-        '''
-        In plain English: how a run prints - just its identifier.
-
-        Output: that text.
-        '''
         return f"Run('{self.run_id}')"
 
     def __repr__(self) -> str:
-        '''
-        In plain English: same as above, used inside a list.
-
-        Output: that text.
-        '''
         return self.__str__()
 
     @classmethod
     def create(cls) -> 'Run[StateSchema]':
-        '''
-        In plain English: starts a new run and stamps the time it began.
-
-        Output: the fresh run, ready to collect recorded moments.
-        '''
+        """Start a new run, stamped with the current time."""
         return cls(
             run_id=str(uuid.uuid4()),
             start_timestamp=datetime.now()
@@ -246,12 +162,7 @@ class Run(Generic[StateSchema]):
 
     @property
     def metadata(self) -> Dict:
-        '''
-        In plain English: a short summary of the run - its identifier, when it started
-        and finished, how many moments were recorded.
-
-        Output: those details as a dictionary, for logging.
-        '''
+        """Return the run id, its start and end times, and the snapshot count."""
         return {
             "run_id": self.run_id,
             "start_timestamp": self.start_timestamp.strftime("%Y-%m-%d %H:%M:%S.%f"),
@@ -276,31 +187,15 @@ class Run(Generic[StateSchema]):
 
 class StateMachine(Generic[StateSchema]):
     def __init__(self, state_schema: Type[StateSchema]):
-        '''
-        In plain English: creates an empty map, told in advance what shape the notes
-        will have.
-
-        Output: nothing returned. Steps and connections are added next.
-        '''
         self.state_schema = state_schema
         self.steps: Dict[str, Step[StateSchema]] = {}
         self.transitions: Dict[str, List[Transition[StateSchema]]] = {}
 
     def __str__(self) -> str:
-        '''
-        In plain English: how a machine prints - the field names its notes carry.
-
-        Output: that text.
-        '''
         schema_keys = list(get_type_hints(self.state_schema).keys())
         return f"StateMachine(schema={schema_keys})"
 
     def __repr__(self) -> str:
-        '''
-        In plain English: same as above, used inside a list.
-
-        Output: that text.
-        '''
         return self.__str__()
 
     def add_steps(self, steps: List[Step[StateSchema]]):
@@ -314,15 +209,14 @@ class StateMachine(Generic[StateSchema]):
         targets: Union[Step[StateSchema], str, List[Union[Step[StateSchema], str]]],
         condition: Optional[Callable[[StateSchema], Union[str, List[str]]]] = None
     ):
-        '''
-        In plain English: draws an arrow from one step to another, optionally with a
-        condition on it.
+        """Connect a source step to one or more target steps.
 
-        Without a condition the route is fixed. With one, the condition decides at the
-        moment of travel. Every branch in this project is one of these.
-
-        Output: nothing returned; the arrow is added to the map.
-        '''
+        Args:
+            source: Step or step id the transition leaves from.
+            targets: Step(s) or id(s) it may lead to.
+            condition: Called with the state to choose among `targets`.
+                Without one, the transition is unconditional.
+        """
         src_id = source.step_id if isinstance(source, Step) else source
         target_list = targets if isinstance(targets, list) else [targets]
         target_ids = [t.step_id if isinstance(t, Step) else t for t in target_list]
@@ -332,20 +226,19 @@ class StateMachine(Generic[StateSchema]):
         self.transitions[src_id].append(transition)
 
     def run(self, state: StateSchema, resource: Resource = None):
-        # Validate that state has at least one field from the schema
-        '''
-        In plain English: walks the map from start to finish, doing the work at each
-        stop.
+        """Execute the machine from its entry point until termination.
 
-        For each step it does the work, records a snapshot, then asks which arrow to
-        follow. It stops at the end marker. Two situations are treated as programming
-        errors rather than handled: a step with nowhere to go, and a condition that
-        returns more than one destination, since running two branches at once is not
-        supported.
+        Args:
+            state: Initial state; must share at least one key with the schema.
+            resource: Passed to steps whose action takes two arguments.
 
-        Output: the completed run - the final notes plus the full record of which steps
-        were visited and in what order.
-        '''
+        Returns:
+            The completed `Run`, holding one snapshot per step visited.
+
+        Raises:
+            ValueError: If the initial state shares no key with the schema.
+            NotImplementedError: If a condition resolves to more than one target.
+        """
         expected_fields = get_type_hints(self.state_schema)
         state_fields = set(state.keys())
         common_fields = state_fields.intersection(expected_fields)

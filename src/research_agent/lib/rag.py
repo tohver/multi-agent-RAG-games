@@ -33,12 +33,6 @@ class RAG:
     reducing hallucinations and improving factual accuracy.
     """
     def __init__(self, llm: LLM, vector_store: VectorStore):
-        '''
-        In plain English: sets up the classic three-step retrieval pipeline - find, add
-        context, answer.
-
-        Output: nothing returned; ready to be used through `invoke`.
-        '''
         self.workflow = self._create_state_machine()
         self.resource = Resource(
             services = {
@@ -48,13 +42,7 @@ class RAG:
         )
 
     def _retrieve(self, state:RAGState, resource:Resource) -> RAGState:
-        '''
-        In plain English: step one - find the documents closest in meaning to the
-        question.
-
-        Output: the documents and their distances, put into the shared notes for the
-        next step.
-        '''
+        """Retrieve the documents most similar to the question."""
         question = state["question"]
         vector_store:VectorStore = resource.services.get("vector_store")
         results = vector_store.query(query_texts=[question])
@@ -65,15 +53,7 @@ class RAG:
         return {"documents": documents, "distances": distances}
 
     def _augment(self, state:RAGState) -> RAGState:
-        '''
-        In plain English: step two - build the prompt, with the found documents pasted
-        in as context.
-
-        This is the "augmented" part of retrieval-augmented generation: the model is not
-        asked from memory, it is asked to read.
-
-        Output: the finished conversation, ready to send.
-        '''
+        """Build the prompt with the retrieved documents as context."""
         question = state["question"]
         documents = state["documents"]
         context = "\n\n".join(documents)
@@ -94,12 +74,7 @@ class RAG:
         return {"messages": messages}
 
     def _generate(self, state:RAGState, resource:Resource) -> RAGState:
-        '''
-        In plain English: step three - send the prompt and get the written answer.
-
-        Output: the answer text, plus the conversation including the reply, in case a
-        caller wants to see exactly what was asked.
-        '''
+        """Send the prompt and record the generated answer."""
         llm:LLM = resource.services.get("llm")
         ai_message = llm.invoke(state["messages"])
         return {
@@ -108,11 +83,7 @@ class RAG:
         }
 
     def _create_state_machine(self) -> StateMachine[RAGState]:
-        '''
-        In plain English: wires the three steps into a fixed order, with no branching.
-
-        Output: the assembled pipeline, used by `invoke`.
-        '''
+        """Wire retrieve, augment and generate in fixed order."""
         machine = StateMachine[RAGState](RAGState)
 
         # Create steps
@@ -134,7 +105,7 @@ class RAG:
         """
         Execute the complete RAG pipeline for a given query.
         
-        This is the main entry point for the RAG system. It initializes the
+        Main entry point for the RAG system. Initializes the
         pipeline state with the user's question and executes the complete
         retrieve-augment-generate workflow.
         

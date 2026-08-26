@@ -34,19 +34,7 @@ def install_html_404_retry(max_attempts: int = 5, base_delay: float = 0.4) -> bo
     original_send = httpx.Client.send
 
     def send_retrying_html_404(self, request, **kwargs):
-        '''
-        In plain English: the replacement for the HTTP library's "send" step.
-
-        It sends the request as normal. If the reply is an HTML page with a 404,
-        it waits a moment and tries again - doubling the wait each time, so a
-        server that is genuinely struggling is not hammered. Any other reply,
-        including a real JSON 404 from the API, is handed back untouched, so
-        genuine errors stay visible instead of being silently retried away.
-
-        Output: the HTTP response, exactly as the caller expects. Nobody calls
-        this directly; it takes the place of the library's own method, so every
-        request in the program passes through it without knowing.
-        '''
+        """Send the request, retrying while the response is an HTML 404."""
         for attempt in range(max_attempts):
             response = original_send(self, request, **kwargs)
 

@@ -13,16 +13,6 @@ class LLM:
         tools: Optional[List[Tool]] = None,
         api_key: Optional[str] = None
     ):
-        '''
-        In plain English: opens one connection to the language model.
-
-        Worth creating these sparingly. Each one carries its own pool of network
-        connections, so building a fresh one for every question would throw away the
-        ability to reuse an open connection - noticeably slower over many calls. This
-        project builds one per role and keeps it.
-
-        Output: nothing returned; the connection is ready for `invoke`.
-        '''
         self.model = model
         self.temperature = temperature
         self.client = OpenAI(api_key=api_key) if api_key else OpenAI()
@@ -31,23 +21,11 @@ class LLM:
         }
 
     def register_tool(self, tool: Tool):
-        '''
-        In plain English: gives this connection one more tool the model may call.
-
-        Output: nothing returned. The tool is added to the list sent with each request.
-        '''
+        """Make `tool` available to the model on subsequent calls."""
         self.tools[tool.name] = tool
 
     def _build_payload(self, messages: List[BaseMessage]) -> Dict[str, Any]:
-        '''
-        In plain English: assembles the request that will actually be sent.
-
-        Which model, how creative to be, the conversation so far, and - if any tools are
-        registered - their descriptions, along with permission for the model to use them.
-
-        Output: a dictionary ready to hand to the API. Not meant to be called from
-        outside; `invoke` uses it.
-        '''
+        """Assemble the request body for the chat completions API."""
         payload = {
             "model": self.model,
             "temperature": self.temperature,
@@ -61,16 +39,11 @@ class LLM:
         return payload
 
     def _as_messages(self, input: Any) -> List[BaseMessage]:
-        '''
-        In plain English: accepts whatever shape the caller found convenient and turns
-        it into a proper conversation.
+        """Normalise a string, message, or message list into a message list.
 
-        A bare string, a single message or a list of messages all end up as a list of
-        messages, so nothing downstream has to check.
-
-        Output: a list of messages. Raises if given something it cannot make sense of,
-        rather than sending a malformed request.
-        '''
+        Raises:
+            ValueError: If the input is none of those.
+        """
         if isinstance(input, str):
             return [UserMessage(content=input)]
         elif isinstance(input, BaseMessage):
@@ -83,18 +56,16 @@ class LLM:
     def invoke(self, 
                input: str | BaseMessage | List[BaseMessage],
                response_format: BaseModel = None,) -> AIMessage:
-        '''
-        In plain English: sends the conversation to the model and returns its reply.
-        Every model call in this whole project passes through here.
+        """Send the conversation to the model and return its reply.
 
-        Passing a `response_format` changes the request in an important way: instead of
-        free prose, the model is required to answer in a given shape. That is what makes
-        the judge's verdict something the program can branch on rather than something it
-        has to interpret.
+        Args:
+            input: A string, a single message, or a list of messages.
+            response_format: Pydantic model the reply must match; switches to
+                the structured-output endpoint.
 
-        Output: the reply, along with any tools the model wants called and how many
-        tokens were used. The token count feeds the cost estimate in the evaluation.
-        '''
+        Returns:
+            The assistant message, with tool calls and token usage attached.
+        """
         messages = self._as_messages(input)
         payload = self._build_payload(messages)
         if response_format:

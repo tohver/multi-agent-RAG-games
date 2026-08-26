@@ -9,15 +9,7 @@ class BaseMessage(BaseModel):
     content: Optional[str] = ""
 
     def dict(self) -> Dict:
-        '''
-        In plain English: turns a message into a plain dictionary for sending to the API.
-
-        The rest of the code works with typed message objects, which catch mistakes
-        early. The API wants plain data. This is the conversion point.
-
-        Output: the message as a dictionary. Called once per message just before a
-        request goes out.
-        '''
+        """Return the message as a plain dict for the API payload."""
         return dict(self)
 
 

@@ -32,28 +32,16 @@ class ResearchState(TypedDict):
 
 
 class ResearchAgent:
-    """The whole pipeline as one state machine.
+    """The whole pipeline as one state machine, one node per tool::
 
-    Each of the five tools is a node, and three conditions decide which nodes
-    actually run::
+        retrieve -> evaluate -> [sufficient] answer
+                             -> recall -> [hit]  answer
+                                       -> [miss] web_search -> answer -> remember
 
-        retrieve -> evaluate -+-[useful]-----------------------> answer
-                              |                                    ^
-                              +-[not useful]-> recall -+-[hit]-----+
-                                                       |
-                                                       +-[miss]-> web_search -+
-                                                                              |
-                        termination <- [no web search] <- answer <------------+
-                                            ^                 |
-                                            +-- remember <----+ [after web search]
-
-    Long-term memory is a cache of answers that previously cost a web search, so
-    it sits on the path to the web: consulted only when the collection cannot
-    answer, written only when the web actually had to be called.
-
-    The LLM never picks the tools; `evaluate_retrieval` and the cache lookup do.
-    The same question therefore takes the same path every time, and that path is
-    recorded in `run.snapshots`.
+    The cache is consulted only when the collection cannot answer, and written
+    only when the web was actually called. Routing is decided by
+    `evaluate_retrieval` and the cache lookup, never by the model, so a question
+    always takes the same path; that path is recorded in `run.snapshots`.
     """
 
     def __init__(self, tools: ToolSet, settings: Settings):

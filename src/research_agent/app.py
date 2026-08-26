@@ -17,31 +17,15 @@ from .workflow import ResearchAgent
 class Application:
     """A fully wired agent together with the resources it depends on.
 
-    Opens a database connection or an API client. 
-    Collecting them in one immutable object keeps that wiring explicit and 
-    avoids module-level globals, so two applications can coexist in the same process 
-    against different databases and different configurations.
-
-    One instance serves any number of questions and is intended to be built
-    once at startup and reused. Answering a question may write to `memory`,
-    when the answer had to be researched on the web; every other field is
-    read-only for the lifetime of the application.
+    Built once at startup by `build_application` and reused for any number of
+    questions. Answering may write to `memory`; every other field is read-only.
 
     Attributes:
-        settings: The resolved configuration every other field was built from.
-            Read values from here rather than re-reading the environment.
-        chroma_client: Open connection to the persistent ChromaDB instance,
-            shared by the game collection and the answer cache.
-        memory: Long-term cache of answers that previously required a web
-            search. Use it to inspect or clear cached entries.
-        tools: The five tools, already bound to their clients and settings.
-        agent: The state machine that routes a question through those tools.
-            The usual entry point is `app.agent.invoke(question)`.
-
-    Example:
-        >>> app = build_application()
-        >>> run = app.agent.invoke("What is the genre of Halo Infinite?")
-        >>> print(run.get_final_state()["answer"])
+        settings: The configuration every other field was built from.
+        chroma_client: Connection shared by the game collection and the cache.
+        memory: Cache of answers that previously required a web search.
+        tools: The five tools, bound to their clients.
+        agent: The state machine; call `app.agent.invoke(question)`.
     """
 
     settings: Settings

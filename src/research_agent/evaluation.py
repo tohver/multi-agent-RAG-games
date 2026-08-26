@@ -1,10 +1,8 @@
 """Evaluation suite for the research agent.
 
-Each case is scored on two independent axes: the node path the run took,
-compared strictly against the expected route, and the quality of the final
-answer, graded by the LLM judge in `lib.evaluation`. Only the path determines
-the exit code; answer scores depend on live web results and would fail at
-random.
+Each case is scored on two independent axes: 
+the node path compared strictly against the expected route, and 
+the quality of the final answer, graded by the LLM judge in `lib.evaluation`. 
 """
 
 import time

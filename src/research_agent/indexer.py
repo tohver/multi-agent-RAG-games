@@ -67,24 +67,18 @@ def _missing_fields(game: dict) -> List[str]:
 
 
 def load_games(games_dir: Path) -> LoadReport:
-    """Read every JSON file into a `Document`.
+    """Read every JSON file in `games_dir` into a `Document`.
 
-    The indexed text bundles 'platform', 'genre', 'name', 'year', and 'description' into
-    one line, so a question phrased around any of those has something to match
-    on. The full record is kept as metadata.
-
-    Args:
-        games_dir: Directory holding the JSON files.
+    Platform, genre, name, year and description are indexed as one line; the
+    full record is kept as metadata. Unusable files are collected, not raised.
 
     Returns:
-        A `LoadReport`: one `Document` per file, ordered by filename and
-        keyed on the filename stem so re-indexing updates rather than
-        duplicates, plus a `SkippedFile` for every file that could not be used.
+        A `LoadReport`: one `Document` per usable file, ordered by filename and
+        keyed on its stem so re-indexing updates rather than duplicates, plus a
+        `SkippedFile` for each file that could not be used.
 
     Raises:
-        FileNotFoundError: If the directory does not exist. That is a different
-            kind of problem from a bad file inside it - there is nothing to
-            salvage and nothing to report on.
+        FileNotFoundError: If `games_dir` does not exist.
     """
     if not games_dir.is_dir():
         raise FileNotFoundError(f"No games directory at {games_dir}")
