@@ -1,12 +1,7 @@
-"""Build the game collection from the JSON files in `data/games/`.
-
-This is the one step that has to run before anything else works: without it
-there is no collection to retrieve from. It is idempotent - re-running it
-refreshes existing entries rather than failing on duplicate ids.
-
-A source file that cannot be used does not stop the run. It is set aside with
-the reason, and the whole list is written to a report file, so one malformed
-file cannot cost you every other one in the directory.
+"""Build the game collection from the JSON files. 
+For this project the documents are located in folder `data/games/`.
+This step has to run before anything else.
+The incomplete/damaged source files are ignored and listed in the report.
 """
 
 import json

@@ -1,7 +1,8 @@
 """The web-answer cache: a `LongTermMemory` kept on disk.
 
-Only answers that once cost a web search live here. They are stored as
-`question -> answer`, so a later lookup matches on how the question was phrased.
+Only answers that once cost a live web search. The answers are stored as
+`question -> answer` in the memory, 
+so a later lookup matches on how the question was phrased.
 """
 
 from chromadb.api import ClientAPI

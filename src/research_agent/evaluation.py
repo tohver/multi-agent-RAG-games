@@ -1,9 +1,10 @@
-"""Evaluation suite: check the path taken and the quality of the answer.
+"""Evaluation suite for the research agent.
 
-Two things are worth checking about a state machine like this one. First,
-whether a question reaches the nodes it should - a correct answer produced by
-the wrong path is luck, not design. Second, whether the answer is any good,
-which is scored by the LLM judge in `lib.evaluation`.
+Each case is scored on two independent axes: the node path the run took,
+compared strictly against the expected route, and the quality of the final
+answer, graded by the LLM judge in `lib.evaluation`. Only the path determines
+the exit code; answer scores depend on live web results and would fail at
+random.
 """
 
 import time

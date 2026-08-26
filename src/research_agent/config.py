@@ -23,15 +23,13 @@ class Settings:
     Attributes:
         openai_api_key: Key for chat completions and embeddings.
         tavily_api_key: Key for the web search tool.
-        chat_model: Chat model used by every LLM role in the pipeline. The
-            embedding model is a separate one, owned by ChromaDB.
-        chroma_path: Directory holding the persistent Chroma database.
-        games_path: Directory of source JSON files, read by the indexer.
-        skip_report_path: Where the indexer lists source files it had to
-            skip. Deleted again on a clean run, so a stale report can never
-            be mistaken for a current one.
-        collection_name: Collection with the indexed game documents. Created by
-            the indexer, so this name is fixed rather than free choice.
+        chat_model: Chat model used by the LLM roles in the pipeline. 
+            The embedding model is a separate one, owned by ChromaDB.
+        chroma_path: Directory of the persistent Chroma database.
+        games_path: Directory of source JSON documents, read by the indexer.
+        skip_report_path: path to where the indexer lists the skipped source files. 
+            Deleted again on a clean run.
+        collection_name: Collection with the indexed game documents. 
         memory_collection: Collection holding the web-answer cache.
         memory_owner: Owner label every cache entry is stored under.
         memory_namespace: Namespace label, keeps these entries separate from
@@ -43,7 +41,7 @@ class Settings:
         max_web_results: Number of web results requested per search.
         snippet_chars: How much of each web result's text is kept.
         answer_temperature: Temperature for the answer step. The judge always
-            runs at 0.0, because a verdict should be reproducible.
+            runs at 0.0, a verdict should be reproducible.
     """
 
     openai_api_key: str
@@ -65,7 +63,7 @@ class Settings:
 
     @classmethod
     def from_env(cls, **overrides) -> "Settings":
-        """Build settings from `.env` / the process environment.
+        """Build settings from `.env.
 
         Args:
             **overrides: Any field above, to override the resolved value.
