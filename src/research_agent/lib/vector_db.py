@@ -26,35 +26,14 @@ class VectorStore:
 
     @property
     def name(self) -> str:
-        '''
-        In plain English: the name of the collection this is working with.
-
-        Output: the name as text, useful in logs and error messages.
-        '''
         """Name of the underlying collection."""
         return self._collection.name
 
     def count(self) -> int:
-        '''
-        In plain English: how many documents are currently stored.
-
-        Output: the number. Used after indexing to confirm the data actually landed.
-        '''
         """Number of documents currently stored."""
         return self._collection.count()
 
     def add(self, item: Union[Document, Corpus, List[Document]]) -> None:
-        '''
-        In plain English: saves documents to the database, converting them to numbers on
-        the way in.
-
-        It accepts a single document, a list, or a collection, and normalises them,
-        because callers should not have to remember which shape is expected. That
-        conversion to numbers is what makes searching by meaning possible later.
-
-        Output: nothing returned. The documents are stored and immediately searchable.
-        Fails if an id already exists - use `upsert` when repeating is expected.
-        '''
         """Add documents, embedding them with the collection's function.
 
         Args:
@@ -85,15 +64,6 @@ class VectorStore:
         )
 
     def upsert(self, item: Union[Document, Corpus, List[Document]]) -> None:
-        '''
-        In plain English: like `add`, but safe to run twice.
-
-        Where `add` fails on a document that is already there, this replaces it. That is
-        what lets the index be rebuilt from source files at any time without cleaning up
-        first - a small difference that removes a whole category of annoyance.
-
-        Output: nothing returned. The documents are stored or refreshed.
-        '''
         """Add documents, replacing any that already exist under the same id.
 
         Unlike `add`, this is safe to run twice - useful when an index is
@@ -121,17 +91,6 @@ class VectorStore:
         where: Optional[Dict[str, Any]] = None,
         where_document: Optional[Dict[str, Any]] = None,
     ) -> QueryResult:
-        '''
-        In plain English: finds the documents closest in meaning to what you asked.
-
-        This is the search at the heart of the whole project. Worth knowing: it always
-        returns its closest matches, even when none of them is actually relevant. It has
-        no concept of "nothing found". That is precisely why the agent puts a judge in
-        front of the results rather than trusting them.
-
-        Output: the matching documents, each with a distance saying how close it was,
-        plus its stored metadata.
-        '''
         """Find the documents most similar to the query text.
 
         Args:
@@ -162,16 +121,6 @@ class VectorStore:
         where: Optional[Dict[str, Any]] = None,
         limit: Optional[int] = None,
     ) -> GetResult:
-        '''
-        In plain English: fetches documents directly by id or by label, with no
-        searching involved.
-
-        Use it when you know exactly what you want, rather than looking for something
-        similar.
-
-        Output: the requested documents and their metadata. Note there are no distances
-        here - nothing was compared, so there is nothing to measure.
-        '''
         """Fetch documents by id or metadata filter, without a similarity search.
 
         Args:
@@ -195,11 +144,6 @@ class VectorStore:
 
     def delete(self, ids: Optional[List[str]] = None,
                where: Optional[Dict[str, Any]] = None) -> None:
-        '''
-        In plain English: removes documents, either by id or by label.
-
-        Output: nothing returned. The documents are gone from disk.
-        '''
         """Delete documents by id or metadata filter.
 
         Args:

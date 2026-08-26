@@ -65,21 +65,6 @@ class Settings:
 
     @classmethod
     def from_env(cls, **overrides) -> "Settings":
-        '''
-        In plain English: this is where the program picks up your API keys.
-
-        It reads the `.env` file sitting next to the project, pulls out the two
-        keys, and stops immediately with a clear message if either is missing -
-        which is far kinder than failing later with an authentication error in
-        the middle of a run.
-
-        Output: a `Settings` object holding the keys plus every default the rest
-        of the program needs - which model to use, where the database lives, how
-        long cached answers stay valid. That object is passed to
-        `build_application`, which hands pieces of it to everything it builds.
-        Anything you pass as a keyword argument overrides the default, so tests
-        and experiments can change one value without touching the code.
-        '''
         """Build settings from `.env` / the process environment.
 
         Args:

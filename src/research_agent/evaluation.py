@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List
 
-from .framework.evaluation import AgentEvaluator, EvaluationResult, TestCase
+from .lib.evaluation import AgentEvaluator, EvaluationResult, TestCase
 
 from .app import Application
 from .workflow import ResearchAgent
@@ -44,19 +44,6 @@ class WorkflowCase:
 
 
 def default_cases() -> List[WorkflowCase]:
-    '''
-    In plain English: the standard set of questions used to check the agent still
-    works.
-
-    Five questions, chosen so that between them they force the pipeline down every
-    possible route: three that the local database can answer, one that it cannot,
-    and then that same unanswerable question a second time - which should now come
-    back from the cache without touching the internet. Asking it twice is the whole
-    trick; it is what proves the cache is doing its job.
-
-    Output: the list of cases, each carrying the question, a model answer to be
-    judged against, and the exact route the question ought to take.
-    '''
     """The suite covering every branch of the machine.
 
     Returns:
@@ -128,19 +115,6 @@ def run_case(
     item: WorkflowCase,
     verbose: bool = True,
 ) -> Dict:
-    '''
-    In plain English: runs one test question and scores it two different ways.
-
-    The first score is the route: did the question visit exactly the steps it was
-    supposed to? This is a strict comparison, because the route is meant to be
-    predictable - if it changes, something is genuinely broken.
-
-    The second score is the answer itself, graded by a separate model call against a
-    reference answer. This one is a judgement call, not a fact.
-
-    Output: a small summary - which case, whether the route matched, the answer
-    score, and how long it took. Collected into the table printed at the end.
-    '''
     """Run one case, check the path it took, and judge the final answer.
 
     Args:
@@ -187,18 +161,6 @@ def run_suite(
     cases: List[WorkflowCase] = None,
     verbose: bool = True,
 ) -> List[Dict]:
-    '''
-    In plain English: runs the whole set of test questions and prints the results.
-
-    It empties the cache first. That matters more than it sounds: without it the
-    "never seen this before" case would find last run's answer sitting in the cache,
-    take the wrong route, and quietly stop testing anything.
-
-    Output: one row per case, and a printed table. The rows are what the command
-    line uses to decide the exit code - and only the route decides it, never the
-    answer score, because two of the cases depend on whatever the live web returns
-    that minute and would otherwise fail at random.
-    '''
     """Run every case from a cold cache and print a summary table.
 
     The cache is cleared first: otherwise `cache_miss` would hit whatever a

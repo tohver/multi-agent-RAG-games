@@ -50,15 +50,6 @@ class Step(Generic[StateSchema]):
         return self.__str__()
 
     def _calculate_params_count(self):
-        '''
-        In plain English: works out whether this step's work needs one input or two.
-
-        Some steps only need the running notes; others also need shared resources. This
-        lets both be written naturally, without every step having to accept an argument
-        it will not use.
-
-        Output: the number of arguments, remembered and used on every run.
-        '''
         """Calculate the number of parameters excluding 'self' for bound methods"""
         if inspect.ismethod(self.action):
             # For bound methods, subtract 1 to exclude 'self'
@@ -269,31 +260,14 @@ class Run(Generic[StateSchema]):
         }
 
     def add_snapshot(self, snapshot: Snapshot[StateSchema]):
-        '''
-        In plain English: files one recorded moment into this run.
-
-        Output: nothing returned. Called automatically after every step.
-        '''
         """Add a new snapshot to this run"""
         self.snapshots.append(snapshot)
 
     def complete(self):
-        '''
-        In plain English: stamps the time the run finished.
-
-        Output: nothing returned. The gap between the two stamps is what the evaluation
-        reports as execution time.
-        '''
         """Mark this run as complete"""
         self.end_timestamp = datetime.now()
 
     def get_final_state(self) -> Optional[StateSchema]:
-        '''
-        In plain English: the notes as they stood when the run ended.
-
-        Output: the final state - which is where the answer lives. This is the method
-        almost every caller in the project uses to get a result out of a run.
-        '''
         """Get the final state of this run"""
         if not self.snapshots:
             return None
@@ -330,12 +304,6 @@ class StateMachine(Generic[StateSchema]):
         return self.__str__()
 
     def add_steps(self, steps: List[Step[StateSchema]]):
-        '''
-        In plain English: puts steps on the map, so they can be referred to by name.
-
-        Output: nothing returned. Adding a step does not connect it to anything - that
-        is the next method's job.
-        '''
         """Add steps to the workflow"""
         for step in steps:
             self.steps[step.step_id] = step

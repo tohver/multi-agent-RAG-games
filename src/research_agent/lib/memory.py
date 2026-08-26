@@ -61,11 +61,6 @@ class LongTermMemory:
     """
 
     def __init__(self, vector_store: VectorStore):
-        '''
-        In plain English: connects this memory to the place its entries are stored.
-
-        Output: nothing returned. The memory is ready to save and search from here on.
-        '''
         """Bind the memory to a vector store.
 
         Args:
@@ -78,16 +73,6 @@ class LongTermMemory:
         memory_fragment: MemoryFragment,
         metadata: Optional[Dict[str, str]] = None,
     ) -> None:
-        '''
-        In plain English: saves one piece of information so it can be found later.
-
-        Along with the text itself it records who it belongs to, which group it is part
-        of, and when it was saved. Those three labels are what make it possible to search
-        only one user's entries, and to ignore entries that have gone stale.
-
-        Output: nothing returned. The effect is a new entry on disk, searchable
-        immediately.
-        '''
         """Store one fragment.
 
         Args:
@@ -115,19 +100,6 @@ class LongTermMemory:
         timestamp_filter: Optional[TimestampFilter] = None,
         namespace: str = "default",
     ) -> MemorySearchResult:
-        '''
-        In plain English: finds saved entries that mean roughly the same as what you
-        asked, rather than ones containing the same words.
-
-        That distinction is the point: ask "which console do I use" and it can find "the
-        user plays on a Nintendo Switch", despite no shared wording. Results are always
-        limited to one owner and one group, so entries can never leak between users.
-
-        Output: the matching entries, plus a distance for each - a number saying how far
-        apart the meanings are, smaller being closer. Those numbers matter: the caller
-        uses them to throw away weak matches, which is how the cache avoids answering
-        one question with another question's answer.
-        '''
         """Find fragments semantically close to the query.
 
         Args:
@@ -174,14 +146,6 @@ class LongTermMemory:
         )
 
     def clear(self, owner: str, namespace: str) -> None:
-        '''
-        In plain English: deletes every entry belonging to one owner and group.
-
-        Used to start from a clean slate - mainly before a test run, so results do not
-        depend on what an earlier run happened to leave behind.
-
-        Output: nothing returned. The entries are gone from disk.
-        '''
         """Delete every fragment for one owner and namespace.
 
         Args:

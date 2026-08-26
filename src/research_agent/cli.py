@@ -56,11 +56,6 @@ def _answer_once(app: Application, question: str, show_path: bool) -> None:
 
 
 def _interactive(app: Application) -> int:
-    '''
-    
-
-    Output: an exit code of 0. Leaving the loop is a normal end, not an error.
-    '''
     """The conversational mode, ask questions in a loop until the user stops.
     The default mode, command without arguments.
     Typing `quit`, `exit`, `q`, or pressing Ctrl-C, ends it.

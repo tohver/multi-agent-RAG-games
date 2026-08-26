@@ -237,7 +237,7 @@ src/research_agent/
 ├── cache.py          The web-answer cache
 ├── evaluation.py     Evaluation suite: route checking and answer scoring
 ├── http_patch.py     Retry workaround for an unreliable OpenAI proxy
-└── framework/        Reusable, domain-agnostic building blocks
+└── lib/              Reusable, domain-agnostic building blocks
     ├── state_machine.py   Steps, transitions, runs, snapshots
     ├── llm.py             Thin OpenAI chat wrapper
     ├── vector_db.py       Typed wrapper over a ChromaDB collection
@@ -250,7 +250,7 @@ src/research_agent/
     └── tooling.py         Function-to-tool wrapper
 ```
 
-`framework/` contains nothing specific to video games; `research_agent/` is the
+`lib/` contains nothing specific to video games; `research_agent/` is the
 application built on top of it.
 
 ## Data format

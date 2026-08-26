@@ -7,7 +7,7 @@ from chromadb.api import ClientAPI
 
 from .cache import build_cache
 from .config import Settings
-from .framework.memory import LongTermMemory
+from .lib.memory import LongTermMemory
 from .http_patch import install_html_404_retry
 from .tools import ToolSet, build_tools
 from .workflow import ResearchAgent
@@ -40,24 +40,6 @@ def build_application(
     *,
     patch_http: bool = True,
 ) -> Application:
-    '''
-    In plain English: this is the assembly line. It builds every piece the
-    program needs, in the right order, and connects them.
-
-    Nothing in this project creates a database connection or an API client on
-    its own - they are all created here and handed down. That is deliberate. It
-    means importing any file is free and safe, errors about missing keys happen
-    in one predictable place, and a test can build a second, completely separate
-    copy of the program pointing at a different database without disturbing the
-    first.
-
-    The order matters: the flaky-server workaround goes in before anything
-    touches the network, the database opens before the tools that read from it,
-    and the agent is built last because it needs the finished tools.
-
-    Output: an `Application` holding all five pieces. In practice you use
-    `app.agent` to ask questions and `app.memory` to inspect or clear the cache.
-    '''
     """Open the clients, build the tools, and wire up the agent.
 
     Args:

@@ -131,16 +131,6 @@ class RAG:
         return machine
 
     def invoke(self, query: str) -> Run:
-        '''
-        In plain English: run the three steps for one question.
-
-        Not used by the research agent, which retrieves and answers in separate nodes
-        of its own state machine; this is the self-contained RAG pipeline the framework
-        offers on its own.
-
-        Output: a run object holding the documents, the distances and the generated
-        answer.
-        '''
         """
         Execute the complete RAG pipeline for a given query.
         

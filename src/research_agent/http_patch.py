@@ -17,20 +17,6 @@ _MARKER = "_retries_html_404"
 
 
 def install_html_404_retry(max_attempts: int = 5, base_delay: float = 0.4) -> bool:
-    '''
-    In plain English: this makes the program survive a flaky server.
-
-    Some proxies occasionally hand back a web page saying "404 Not Found"
-    instead of the answer you asked for. Nothing is actually wrong - ask again
-    and it works. Rather than wrapping every single API call in its own retry,
-    this function reaches into the HTTP library once and teaches it to retry
-    that specific failure everywhere, for every call the program will ever make.
-
-    Output: `True` if the patch was installed, `False` if it was already there.
-    That return value mostly protects against installing the retry twice, which
-    would stack retries on top of retries. Called once from
-    `build_application`, before anything else touches the network.
-    '''
     """Patch `httpx.Client.send` to retry HTML 404 responses.
 
     Idempotent: calling it twice leaves a single layer of retries in place.

@@ -89,14 +89,6 @@ class AgentEvaluator:
     """
 
     def __init__(self, model: str = "gpt-4o-mini", api_key: str = None):
-        '''
-        In plain English: sets up the second model that grades answers.
-
-        Its temperature is fixed at zero, meaning it does not improvise. The same answer
-        must score the same twice, or the scores would be noise.
-
-        Output: nothing returned; the judge is ready to grade.
-        '''
         """Create the judge.
 
         Args:
@@ -113,20 +105,6 @@ class AgentEvaluator:
         execution_time: float,
         total_tokens: int,
     ) -> EvaluationResult:
-        '''
-        In plain English: asks a second model to grade an answer the agent produced.
-
-        It sees the question, a reference answer, and what the agent actually said - but
-        deliberately nothing about how the agent got there. Grading blind keeps this
-        honest: a good answer reached the wrong way still reads as a good answer, and
-        checking the route is a separate job done elsewhere.
-
-        If the grade comes back unreadable, it scores zero and says so rather than
-        guessing, because a silently invented score is worse than an obvious failure.
-
-        Output: a score between 0 and 1, the individual judgements behind it, timing and
-        cost, and the grader's reasoning in words.
-        '''
         """Judge one answer against its test case.
 
         Args:

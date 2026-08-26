@@ -21,8 +21,8 @@ from chromadb.api import ClientAPI
 from chromadb.utils import embedding_functions
 
 from .config import Settings
-from .framework.documents import Document
-from .framework.vector_db import VectorStore
+from .lib.documents import Document
+from .lib.vector_db import VectorStore
 
 logger = logging.getLogger(__name__)
 

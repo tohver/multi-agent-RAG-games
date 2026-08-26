@@ -72,17 +72,6 @@ class Corpus(MutableSequence):
         self._documents.insert(index, value)
 
     def to_columns(self) -> Dict[str, List[Any]]:
-        '''
-        In plain English: reshapes the documents into the format the database expects.
-
-        The code here thinks in whole documents - text, id and metadata bundled
-        together. The database thinks in separate parallel lists: all the texts, then all
-        the ids, then all the metadata. This does that translation once, in one place,
-        so nothing else has to.
-
-        Output: a dictionary with three matching lists. Handed straight to the database
-        when documents are saved.
-        '''
         """
         Convert the corpus to the parallel lists batch operations expect.
         

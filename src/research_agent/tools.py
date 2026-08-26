@@ -13,12 +13,12 @@ from chromadb.api import ClientAPI
 from pydantic import BaseModel, Field
 from tavily import TavilyClient
 
-from .framework.llm import LLM
-from .framework.memory import LongTermMemory, MemoryFragment, TimestampFilter
-from .framework.messages import SystemMessage, UserMessage
-from .framework.parsers import PydanticOutputParser
-from .framework.tooling import Tool
-from .framework.vector_db import VectorStore
+from .lib.llm import LLM
+from .lib.memory import LongTermMemory, MemoryFragment, TimestampFilter
+from .lib.messages import SystemMessage, UserMessage
+from .lib.parsers import PydanticOutputParser
+from .lib.tooling import Tool
+from .lib.vector_db import VectorStore
 
 from .config import Settings
 
@@ -51,15 +51,6 @@ class ToolSet:
     register_memory: Tool
 
     def as_list(self) -> List[Tool]:
-        '''
-        In plain English: hands back the five tools as a plain list.
-
-        The agent refers to each tool by name, but anything that just wants to look at
-        all of them - a log line, a test, a check that nothing is missing - wants them
-        in a row. This keeps that order in one place so it is always the same.
-
-        Output: the five tools in pipeline order. Used mainly by `names` below.
-        '''
         """Return the tools in pipeline order."""
         return [
             self.retrieve_game,
@@ -71,15 +62,6 @@ class ToolSet:
 
     @property
     def names(self) -> List[str]:
-        '''
-        In plain English: the names of the five tools, as text.
-
-        Useful when you want to see what the agent is equipped with without printing the
-        tools themselves, which would be a wall of object addresses.
-
-        Output: a list like `['retrieve_game', 'evaluate_retrieval', ...]`. Printed at
-        startup and used in tests to confirm the full set was built.
-        '''
         """Return the tool names, handy for logging and tests."""
         return [tool.name for tool in self.as_list()]
 
@@ -89,23 +71,6 @@ def build_tools(
     chroma_client: ClientAPI,
     memory: LongTermMemory,
 ) -> ToolSet:
-    '''
-    In plain English: this builds the five tools the agent works with, and connects
-    each one to the things it needs - the database, the API clients, your settings.
-
-    Tools are created here rather than at the top of the file for one reason: a tool
-    needs an open database and a live API client, and those should not spring into
-    existence merely because someone imported a file. Building them inside a
-    function means nothing happens until you ask for it, and it means a test can
-    build a second set pointed somewhere else.
-
-    Each tool below is defined as an ordinary Python function and then wrapped, so
-    the model can call it. The wrapper reads the function's own description and
-    argument types to work out how to describe it to the model.
-
-    Output: a `ToolSet` - the five finished tools. It goes straight to
-    `ResearchAgent`, which turns each one into a step in the pipeline.
-    '''
     """Create the five tools bound to one configuration and one set of clients.
 
     Args:
@@ -126,20 +91,6 @@ def build_tools(
     tavily_client = TavilyClient(api_key=settings.tavily_api_key)
 
     def retrieve_game(query: str) -> List[str]:
-        '''
-        In plain English: searches the local game database for whatever the question is
-        about.
-
-        It compares the meaning of the question against the meaning of every stored
-        game, so it can find "the first 3D Mario game" even though those exact words
-        appear nowhere in the data. This is the first thing the agent tries for every
-        question, because a local lookup is faster and cheaper than a web search.
-
-        Output: the closest game records as text - platform, genre, name, year and
-        description. They are not an answer yet; they are raw material. The next step
-        judges whether they are good enough, and the answer step turns them into a
-        sentence.
-        '''
         """
         Semantic search over the video game vector database.
 
@@ -159,25 +110,6 @@ def build_tools(
         return documents[0] if documents else []
 
     def evaluate_retrieval(question: str, retrieved_docs: List[str]) -> EvaluationReport:
-        '''
-        In plain English: a second opinion on whether the search actually found
-        anything useful.
-
-        This exists because a similarity search always returns its closest matches, even
-        when none of them is relevant. Ask about a game that is not in the database and
-        you still get three games back - just wrong ones. Without this check the agent
-        would confidently answer from them.
-
-        So the question and the documents go to the model with one job: are these enough
-        to answer this? The reply comes back as a structured yes/no plus a reason,
-        rather than a paragraph, because the pipeline has to branch on it.
-
-        Output: a report with `useful` (true/false) and `description` (why). The
-        true/false is the single most important value in the whole pipeline - it decides
-        whether the agent answers now or starts looking elsewhere. If the reply cannot
-        be read, it deliberately returns false, so a garbled verdict sends the question
-        onward rather than being mistaken for approval.
-        '''
         """
         Based on the user's question and on the list of retrieved documents,
         it will analyze the usability of the documents to respond to that question.
@@ -223,22 +155,6 @@ def build_tools(
             )
 
     def game_web_search(question: str) -> Dict:
-        '''
-        In plain English: looks the question up on the internet, as a last resort.
-
-        Reached only when the local database came up short and no past answer was
-        cached. It uses a search service that reads the results and writes a short
-        answer, so the agent gets a usable summary rather than ten links.
-
-        Most of the page text is thrown away on purpose. Keeping it would add thousands
-        of words to the conversation with the model - slow, expensive, and mostly
-        irrelevant. A short excerpt per source is enough to check the summary is not
-        invented.
-
-        Output: the summary, the sources it came from, and the time of the search. If
-        the search itself fails, it returns an error message instead of crashing, so one
-        bad request cannot take down the whole run.
-        '''
         """
         Search the web for information about the video game industry.
 
@@ -281,18 +197,6 @@ def build_tools(
         }
 
     def search_memory(query: str) -> List[str]:
-        '''
-        In plain English: checks whether this question was already answered from the
-        internet before, so the search does not have to be paid for twice.
-
-        It only counts as a match if the stored question means very nearly the same
-        thing - a merely related question is not good enough, or the agent would answer
-        a question about one game using the answer about another. Entries older than the
-        cache lifetime are ignored, because facts like "is it on PS5" can change.
-
-        Output: the stored `question -> answer` text, or an empty list if there is no
-        usable match. An empty list is what sends the agent to the web.
-        '''
         """
         Look for a web answer to this question that was already found and cached.
 
@@ -322,21 +226,6 @@ def build_tools(
         ]
 
     def register_memory(question: str, answer: str, sources: List[Dict]) -> str:
-        '''
-        In plain English: saves an answer that cost a web search, so next time it is
-        free.
-
-        Only the finished answer is stored, never the articles it came from. The answer
-        step has already condensed them, so keeping the sources as well would waste
-        space and be re-read into the conversation on every future match.
-
-        The question is stored alongside the answer, in the same searchable text. That
-        is deliberate: the next lookup compares against a question, so having the
-        original wording in there makes the match far more reliable.
-
-        Output: a short confirmation line, mostly for logs. The real result is the entry
-        now sitting in the cache, waiting for the next time someone asks the same thing.
-        '''
         """
         Cache an answer that required a web search, so the same question does
         not have to hit the web again.
